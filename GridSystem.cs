@@ -4,7 +4,7 @@ public class GridSystem
     public int rows, cols;
     public float cellSize;
     private GameObject[,] grid;
-    private bool[,] visitedCells;
+    public bool[,] visitedCells;
 
     public Vector3 originPosition;
     public GridSystem(int rows, int cols, float cellSize, Vector3 originPosition)

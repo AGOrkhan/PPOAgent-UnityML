@@ -31,7 +31,7 @@ public class GridVisualizer : MonoBehaviour
             for (int z = 0; z < gridSystem.cols; z++)
             {
                 // Check if the current cell has been visited
-                if (gridSystem.HasBeenVisited(new Vector3Int(x, 0, z)))
+                if (gridSystem.visitedCells[x, z])
                 {
                     // Calculate the world position of the cell
                     Vector3 cellPosition = gridSystem.CellToWorld(new Vector3Int(x, 0, z));
