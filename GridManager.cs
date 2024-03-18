@@ -1,7 +1,5 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
-using UnityEngine.AI;
 
 public class GridManager : MonoBehaviour
 {
@@ -18,6 +16,7 @@ public class GridManager : MonoBehaviour
     [SerializeField] private float cellSize = 1f;
     [SerializeField] private int obstacleAmount = 10, targetAmount = 1;
     [HideInInspector] public int rows, cols;
+    private int padding = 1;
 
 
 
@@ -35,11 +34,11 @@ public class GridManager : MonoBehaviour
         if (floorRenderer != null)
         {
                 Vector3 size = floorRenderer.bounds.size;
-                originPosition = floorRenderer.bounds.min;
+                originPosition = floorRenderer.bounds.min + new Vector3(padding, 0, padding);
 
                 // Calculate the number of rows and columns based on the size of the environmentPrefab
-                rows = Mathf.FloorToInt(size.x / cellSize);
-                cols = Mathf.FloorToInt(size.z / cellSize);
+                rows = Mathf.FloorToInt(size.x / cellSize) - padding * 2;
+                cols = Mathf.FloorToInt(size.z / cellSize) - padding * 2;
         }
 
         gridSystem = new GridSystem(rows, cols, cellSize, originPosition);
@@ -100,22 +99,36 @@ public class GridManager : MonoBehaviour
             // Determine the orientation, position and length of the wall
             bool isHorizontal = Random.value > 0.5f;
             int length = Random.Range(1, isHorizontal ? (rows-rows/2) : (cols-cols/2));
-            int startRow = Random.Range(0, isHorizontal ? rows : rows - length + 1);
-            int startCol = Random.Range(0, isHorizontal ? cols - length + 1 : cols);
+            int startRow = Random.Range(0, isHorizontal ? rows : rows - length);
+            int startCol = Random.Range(0, isHorizontal ? cols - length : cols);
 
             // Instantiate the wall
             for (int j = 0; j < length; j++)
-            {
-                Vector3Int cellPosition = new Vector3Int(startRow + (isHorizontal ? 0 : j), 0, startCol + (isHorizontal ? j : 0));
-                Vector3 worldPosition = gridSystem.CellToWorld(cellPosition);
-                worldPosition.y = 0f;
-                if (!gridSystem.CellOccupuation(cellPosition))
                 {
-                    GameObject wall = Instantiate(obstaclePrefab, worldPosition, Quaternion.identity);
-                    gridSystem.MarkOccupied(cellPosition, wall);
-                    obstaclePositions.Add(worldPosition);
+                    Vector3Int cellPosition = new Vector3Int(startRow + (isHorizontal ? 0 : j), 0, startCol + (isHorizontal ? j : 0));
+                    Vector3 worldPosition = gridSystem.CellToWorld(cellPosition);
+                    worldPosition.y = 0f;
+                    if (!gridSystem.CellOccupuation(cellPosition))
+                    {
+                        GameObject wall = Instantiate(obstaclePrefab, worldPosition, Quaternion.identity);
+                        
+                        // Extend the size of the wall prefab in the direction it grows
+                        float extension = 1.5f;
+                        Vector3 scale = wall.transform.localScale;
+                        if (isHorizontal)
+                        {
+                            scale.z *= extension;
+                        }
+                        else
+                        {
+                            scale.x *= extension;
+                        }
+                        wall.transform.localScale = scale;
+
+                        gridSystem.MarkOccupied(cellPosition, wall);
+                        obstaclePositions.Add(worldPosition);
+                    }
                 }
-            }
         }
     }
 

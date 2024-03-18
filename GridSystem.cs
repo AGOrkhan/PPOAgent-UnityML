@@ -74,8 +74,11 @@ public class GridSystem
     }
 
     public bool HasBeenVisited(Vector3Int cellPosition)
-    {
-        return visitedCells[cellPosition.x, cellPosition.z];
+    {   
+        if (cellPosition.x >= 0 && cellPosition.x < rows && cellPosition.z >= 0 && cellPosition.z < cols){
+            return visitedCells[cellPosition.x, cellPosition.z];
+        }
+        return false;
     }
     public void ResetVisitation()
     {
