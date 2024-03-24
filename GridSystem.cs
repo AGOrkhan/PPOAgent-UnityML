@@ -70,7 +70,10 @@ public class GridSystem
 
     public void MarkVisited(Vector3Int cellPosition)
     {
-        visitedCells[cellPosition.x, cellPosition.z] = true;
+        if (cellPosition.x >= 0 && cellPosition.x < rows && cellPosition.z >= 0 && cellPosition.z < cols)
+        {
+            visitedCells[cellPosition.x, cellPosition.z] = true;
+        }
     }
 
     public bool HasBeenVisited(Vector3Int cellPosition)

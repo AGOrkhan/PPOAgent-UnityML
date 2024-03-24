@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class TargetHider : MonoBehaviour
 {
-    private GridSystem gridSystem;
     private Rigidbody rb;
     private Vector3 randomDirection;
     private float targetDistance;
     private float distanceMoved;
+    [SerializeField] private float moveSpeed = 10.0f;
 
     private void Start()
     {
@@ -16,7 +16,7 @@ public class TargetHider : MonoBehaviour
     void Update()
         {
             // Calculate the new position
-            Vector3 moveVector = randomDirection * Time.deltaTime;
+            Vector3 moveVector = randomDirection * Time.deltaTime * moveSpeed / Time.timeScale;
             Vector3 newPosition = transform.position + moveVector;
 
             // Move the target to the new position

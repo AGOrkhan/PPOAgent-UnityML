@@ -2,7 +2,6 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
-using System.Collections.Generic;
 
 public class GridBasedSeeker : Agent
 {   
@@ -101,7 +100,7 @@ public class GridBasedSeeker : Agent
         Vector3 newPosition = transform.position + transform.forward * moveAmount * moveSpeed * Time.deltaTime;
         rb.MovePosition(newPosition);
 
-        // Rb Rotation actionwh
+        // Rb Rotation action
         float rotationAmount = actionBuffers.ContinuousActions[1];
         Quaternion newRotation = Quaternion.Euler(transform.rotation.eulerAngles + new Vector3(0, rotationAmount * rotationSpeed * Time.deltaTime, 0));
         rb.MoveRotation(newRotation);
@@ -112,14 +111,12 @@ public class GridBasedSeeker : Agent
         // Check if the cell has been visited before
         if (gridManager.gridSystem.HasBeenVisited(cellPosition))
         {   
-            /*
             if (cellPosition != oldCellPosition)
             {   
                 // Penalty for visiting a previously visited cell
-                AddReward(-0.1f);
+                AddReward(-0.01f);
             }
-            */
-            AddReward(-0.01f);
+
         }
         else{
             // Mark the cell as visited
@@ -128,7 +125,14 @@ public class GridBasedSeeker : Agent
         // oldCellPosition = cellPosition;
 
         // Penaly for each step
-        AddReward(-0.0025f);
+        if (MaxStep > 0)
+        {
+            AddReward(1 / MaxStep);
+        }
+        else
+        {
+            AddReward(-0.0025f);
+        }
     }
 
     private void OnCollisionEnter(Collision collided)
