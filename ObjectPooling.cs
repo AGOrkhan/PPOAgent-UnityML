@@ -71,6 +71,7 @@ public class ObjectPooling : MonoBehaviour
         
         obstacle.SetActive(false);
         obstacles.Enqueue(obstacle);
+        Debug.Log("Obstacle returned" + obstacles.Count);
     }
 
     public void ReturnTarget(GameObject target)
