@@ -55,15 +55,15 @@ public class HiderAgent : Agent
 
         // Set a random rotation
         transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
+
+        // Let GridManager handle obstacle and target generation
+        gridManager.GeneratePrefabs();
         
         // Clear Radius around agent
         gridManager.ClearRadius(cellPosition);
 
         Vector3Int seekerCellPosition = gridManager.gridSystem.WorldToCell(seekerAgent.transform.position);
         gridManager.ClearRadius(seekerCellPosition);
-
-        // Let GridManager handle obstacle and target generation
-        gridManager.GeneratePrefabs();
     }
 
     private void SeekerControl()
@@ -107,7 +107,7 @@ public class HiderAgent : Agent
         rb.MoveRotation(newRotation);
 
         // Reward for staying alive 
-        AddReward(0.001f);
+        AddReward(1f / MaxStep);
     }
 
     private void OnCollisionEnter(Collision collided)
@@ -122,7 +122,7 @@ public class HiderAgent : Agent
                 // gridManager.ClearTarget(collided.gameObject.transform.position);
 
                 gridManager.ColourChange(Color.red);
-                SetReward(1.0f);
+                SetReward(-1.0f);
                 seekerAgent.EndEpisode();
                 EndEpisode();
             }

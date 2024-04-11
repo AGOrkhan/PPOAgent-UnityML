@@ -1,5 +1,6 @@
 using UnityEngine;
 using System.Collections.Generic;
+using Unity.Barracuda;
 
 public class GridManager : MonoBehaviour
 {   
@@ -7,7 +8,6 @@ public class GridManager : MonoBehaviour
     [SerializeField] public GridSystem gridSystem;
     [SerializeField] private Renderer floorRenderer;
     [SerializeField] private GameObject obstaclePrefab, targetPrefab;
-    private GameObject tempObject;
     [SerializeField] private int obstacleAmount = 10, targetAmount = 1;
 
 
@@ -39,7 +39,6 @@ public class GridManager : MonoBehaviour
     // Lists to store the positions of the objects
     private List<Vector3> obstaclePositions = new List<Vector3>();
     private List<Vector3> targetPositions = new List<Vector3>();
-    private List<Vector3Int> tempPositions = new List<Vector3Int>();
 
     // Initialize the grid system
     private void Awake()
@@ -63,9 +62,6 @@ public class GridManager : MonoBehaviour
     
         // Initialize the empty list
         gridSystem.EmptyCellsList();
-
-        // GameObject to clear out a radius
-        tempObject = new GameObject("PlaceHolder");
     }
 
     // Initialize the object pools
@@ -106,10 +102,22 @@ public class GridManager : MonoBehaviour
             for (int z = -radius; z <= radius; z++)
             {
                 Vector3Int nearbyCell = new Vector3Int(cellPosition.x + x, cellPosition.y, cellPosition.z + z);
-                gridSystem.MarkOccupied(nearbyCell, tempObject);
+                if (nearbyCell.x >= 0 && nearbyCell.z >= 0 && nearbyCell.x < rows && nearbyCell.z < cols)
+                {   
+                    GameObject occupant = gridSystem.GetOccupant(nearbyCell);
+                    if (occupant != null)
+                    {
+                        // Deactivate the occupant and return it to the object pool
+                        ObjectPooling.Instance.ReturnObstacle(occupant);
+                        
+                        // Mark the cell as empty
+                        gridSystem.MarkEmpty(nearbyCell);
 
-                // Add the cell to the obstacles list
-                tempPositions.Add(nearbyCell);
+                        // Remove the cell from the obstaclePositions list
+                        Vector3 worldPosition = gridSystem.CellToWorld(nearbyCell);
+                        obstaclePositions.Remove(worldPosition);
+                    }
+                }
             }
         }
     }
@@ -197,14 +205,6 @@ public class GridManager : MonoBehaviour
                 }
             }
             targetPositions.Clear();
-        }
-        if (tempPositions.Count > 0)
-        {
-            foreach (Vector3Int tempPosition in tempPositions)
-            {
-                gridSystem.MarkEmpty(tempPosition);
-            }
-            tempPositions.Clear();
         }
     }
 

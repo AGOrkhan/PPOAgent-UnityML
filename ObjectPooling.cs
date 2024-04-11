@@ -55,12 +55,7 @@ public class ObjectPooling : MonoBehaviour
         }
         else
         {
-            for (int i = 0; i < targetAmount; i++)
-            {
-                GameObject target = Instantiate(targetPrefab);
-                targets.Enqueue(target);
-            }
-            return GetTarget(targetPrefab, targetAmount);
+            throw new Exception("Target pool is empty");
         }
     }
 
@@ -68,10 +63,8 @@ public class ObjectPooling : MonoBehaviour
     {
         // Reset the scale of the obstacle to its original size
         obstacle.transform.localScale = Vector3.one;
-        
         obstacle.SetActive(false);
         obstacles.Enqueue(obstacle);
-        Debug.Log("Obstacle returned" + obstacles.Count);
     }
 
     public void ReturnTarget(GameObject target)

@@ -8,7 +8,6 @@ public class GridBasedSeeker : Agent
     // Grid Related
     private GridManager gridManager; 
     private HiderAgent hiderAgent;
-    public int step = 0;
 
     // Agent Related
     Rigidbody rb; // Not used currently
@@ -34,8 +33,6 @@ public class GridBasedSeeker : Agent
 
     public override void OnEpisodeBegin()
     {   
-        step = step +1;
-        Debug.Log("step: " + step);
         switch (gridManager.currentAgent)
         {
             case GridManager.AgentType.Seeker:
@@ -72,6 +69,9 @@ public class GridBasedSeeker : Agent
 
         // Clear Radius around player
         gridManager.ClearRadius(cellPosition);
+
+        Vector3Int hiderCellPosition = gridManager.gridSystem.WorldToCell(hiderAgent.transform.position);
+        gridManager.ClearRadius(hiderCellPosition);
 
         // Let GridManager handle obstacle and target generation
         gridManager.GeneratePrefabs();
@@ -142,6 +142,7 @@ public class GridBasedSeeker : Agent
 
         // Rb Movement action
         moveAmount = Mathf.Max(0, actionBuffers.ContinuousActions[0]);
+        Debug.Log(moveAmount);
         Vector3 newPosition = transform.position + transform.forward * moveAmount * moveSpeed * Time.deltaTime;
         rb.MovePosition(newPosition);
 
@@ -170,18 +171,12 @@ public class GridBasedSeeker : Agent
         oldCellPosition = cellPosition;
 
         // Penaly for each step
-        if (MaxStep > 0)
-        {
-            AddReward(1 / MaxStep);
-        }
-        else
-        {
-            AddReward(-0.0025f);
-        }
+        AddReward(-1f / MaxStep);
     }
 
     private void OnCollisionEnter(Collision collided)
     {
+        // Agent penalties 
         if (gridManager.currentAgent == GridManager.AgentType.Seeker)
         {
             // Check if the collider belongs to a target
@@ -201,6 +196,14 @@ public class GridBasedSeeker : Agent
                 gridManager.ColourChange(Color.red);
                 SetReward(-1.0f);
                 hiderAgent.EndEpisode();
+                EndEpisode();
+            }
+        }
+        // Agent resetting for hider training
+        else if (gridManager.currentAgent == GridManager.AgentType.Hider)
+        {
+            if (collided.gameObject.layer == LayerMask.NameToLayer("ColliderWall"))
+            {
                 EndEpisode();
             }
         }
