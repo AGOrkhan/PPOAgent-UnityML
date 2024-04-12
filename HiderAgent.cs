@@ -3,6 +3,7 @@ using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
 using System.IO;
+using Unity.VisualScripting;
 
 public class HiderAgent : Agent
 {   
@@ -17,6 +18,7 @@ public class HiderAgent : Agent
     [SerializeField] private float moveSpeed = 10.0f;
     [SerializeField] private float rotationSpeed = 100f;
     private float moveAmount;
+    private Vector3Int respawnPoint;
 
     void Start()
     {
@@ -40,6 +42,9 @@ public class HiderAgent : Agent
             case GridManager.AgentType.Hider:
                 HiderControl();
                 break;
+            case GridManager.AgentType.SelfPlay:
+                SeekerControl();
+                break;
         }
     }
     
@@ -61,9 +66,6 @@ public class HiderAgent : Agent
         
         // Clear Radius around agent
         gridManager.ClearRadius(cellPosition);
-
-        Vector3Int seekerCellPosition = gridManager.gridSystem.WorldToCell(seekerAgent.transform.position);
-        gridManager.ClearRadius(seekerCellPosition);
     }
 
     private void SeekerControl()
@@ -71,9 +73,19 @@ public class HiderAgent : Agent
         // Get a random empty cell position for the start of the agent
         Vector3Int cellPosition = gridManager.gridSystem.RandomCellPos();
         Vector3 worldPosition = gridManager.gridSystem.CellToWorld(cellPosition);
-        transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
+        respawnPoint = cellPosition;
 
-        // Set a random rotation
+        // Clear radius around spawn point then spawn agent
+        gridManager.ClearRadius(cellPosition);
+        transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
+        transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
+    }
+
+    public void LightReset()
+    {
+        // Reset agent to its spawn point
+        Vector3 worldPosition = gridManager.gridSystem.CellToWorld(respawnPoint);
+        transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
         transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
     }
 
@@ -117,10 +129,6 @@ public class HiderAgent : Agent
             // Check if the collider belongs to a target
             if (collided.gameObject.layer == LayerMask.NameToLayer("Seeker"))
             {
-                // Debug.Log("Target Found");
-                // Use it when multiple targets are present
-                // gridManager.ClearTarget(collided.gameObject.transform.position);
-
                 gridManager.ColourChange(Color.red);
                 SetReward(-1.0f);
                 seekerAgent.EndEpisode();
@@ -133,6 +141,14 @@ public class HiderAgent : Agent
                 SetReward(-1.0f);
                 seekerAgent.EndEpisode();
                 EndEpisode();
+            }
+        }
+        else if (gridManager.currentAgent == GridManager.AgentType.SelfPlay)
+        {
+            if (collided.gameObject.layer == LayerMask.NameToLayer("ColliderWall"))
+            {   
+                AddReward(-0.25f);
+                LightReset();
             }
         }
     }

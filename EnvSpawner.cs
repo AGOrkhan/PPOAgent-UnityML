@@ -34,7 +34,7 @@ public class EnvSpawner : MonoBehaviour
             // Instantiate the agents as a child of the environment
             Instantiate(seekerPrefab, environment.transform);
             
-            if (gridManager.currentAgent == GridManager.AgentType.Hider)
+            if (gridManager.currentAgent == GridManager.AgentType.Hider || gridManager.currentAgent == GridManager.AgentType.SelfPlay)
             {
                 Instantiate(hiderPrefab, environment.transform);
             }

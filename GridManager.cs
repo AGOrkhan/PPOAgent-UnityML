@@ -25,7 +25,8 @@ public class GridManager : MonoBehaviour
     public enum AgentType
     {
         Seeker,
-        Hider
+        Hider,
+        SelfPlay
     }
     public AgentType currentAgent;
 

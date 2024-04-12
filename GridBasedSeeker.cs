@@ -15,6 +15,7 @@ public class GridBasedSeeker : Agent
     [SerializeField] private float moveSpeed = 10.0f;
     [SerializeField] private float rotationSpeed = 100f;
     private float moveAmount;
+    private Vector3Int respawnPoint;
     
     private Vector3Int oldCellPosition;
 
@@ -41,6 +42,9 @@ public class GridBasedSeeker : Agent
             case GridManager.AgentType.Hider:
                 HiderControl();
                 break;
+            case GridManager.AgentType.SelfPlay:
+                SeekerControl();
+                break;
         }
     }
 
@@ -63,6 +67,7 @@ public class GridBasedSeeker : Agent
         Vector3Int cellPosition = gridManager.gridSystem.RandomCellPos();
         Vector3 worldPosition = gridManager.gridSystem.CellToWorld(cellPosition);
         transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
+        respawnPoint = cellPosition;
 
         // Set a random rotation
         transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
@@ -70,28 +75,32 @@ public class GridBasedSeeker : Agent
         // Clear Radius around player
         gridManager.ClearRadius(cellPosition);
 
-        Vector3Int hiderCellPosition = gridManager.gridSystem.WorldToCell(hiderAgent.transform.position);
-        gridManager.ClearRadius(hiderCellPosition);
-
         // Let GridManager handle obstacle and target generation
         gridManager.GeneratePrefabs();
     }
 
     private void HiderControl()
     {
+        // Reset visited cells
         gridManager.gridSystem.ResetVisitation();
 
         // Get a random empty cell position for the start of the agent
         Vector3Int cellPosition = gridManager.gridSystem.RandomCellPos();
         Vector3 worldPosition = gridManager.gridSystem.CellToWorld(cellPosition);
+            
+        // Clear radius around spawn point then spawn agent
+        gridManager.ClearRadius(cellPosition);
         transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
-
-        // Set a random rotation
         transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
-
-        // Clearing done by hider script because of execution order
     }
 
+    public void LightReset()
+    {
+        // Reset agent to its spawn point
+        Vector3 worldPosition = gridManager.gridSystem.CellToWorld(respawnPoint);
+        transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
+        transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
+    }
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
@@ -142,7 +151,6 @@ public class GridBasedSeeker : Agent
 
         // Rb Movement action
         moveAmount = Mathf.Max(0, actionBuffers.ContinuousActions[0]);
-        Debug.Log(moveAmount);
         Vector3 newPosition = transform.position + transform.forward * moveAmount * moveSpeed * Time.deltaTime;
         rb.MovePosition(newPosition);
 
@@ -206,6 +214,22 @@ public class GridBasedSeeker : Agent
             {
                 EndEpisode();
             }
+        }
+        else if (gridManager.currentAgent == GridManager.AgentType.SelfPlay)
+        {
+            if (collided.gameObject.layer == LayerMask.NameToLayer("Target"))
+            {
+                SetReward(1.0f);
+                hiderAgent.SetReward(-1f);
+                hiderAgent.EndEpisode();
+                EndEpisode();
+            }
+            else if (collided.gameObject.layer == LayerMask.NameToLayer("ColliderWall"))
+            {   
+                SetReward(-1.0f);
+                LightReset();
+            }
+
         }
     }
 }
