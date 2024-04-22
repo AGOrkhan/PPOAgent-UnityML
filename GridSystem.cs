@@ -83,12 +83,12 @@ public class GridSystem
             else
             {
                 grid[cellPosition.x, cellPosition.z] = obj;
-
                 // Remove the cell from the emptyCells list
                 emptyCells.Remove(cellPosition);
             }
         }
     }
+    
     public void MarkEmpty(Vector3Int cellPosition)
     {
         if (cellPosition.x >= 0 && cellPosition.x < rows && cellPosition.z >= 0 && cellPosition.z < cols)

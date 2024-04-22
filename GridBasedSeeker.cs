@@ -67,16 +67,16 @@ public class GridBasedSeeker : Agent
         Vector3Int cellPosition = gridManager.gridSystem.RandomCellPos();
         Vector3 worldPosition = gridManager.gridSystem.CellToWorld(cellPosition);
         transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
-        respawnPoint = cellPosition;
 
         // Set a random rotation
         transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
 
-        // Clear Radius around player
-        gridManager.ClearRadius(cellPosition);
-
         // Let GridManager handle obstacle and target generation
         gridManager.GeneratePrefabs();
+        Debug.Log("SeekerControl spawned obstacles and target");
+
+        // Clear radius for both agents
+        gridManager.ClearRadius(gameObject);
     }
 
     private void HiderControl()
@@ -87,11 +87,10 @@ public class GridBasedSeeker : Agent
         // Get a random empty cell position for the start of the agent
         Vector3Int cellPosition = gridManager.gridSystem.RandomCellPos();
         Vector3 worldPosition = gridManager.gridSystem.CellToWorld(cellPosition);
-            
-        // Clear radius around spawn point then spawn agent
-        gridManager.ClearRadius(cellPosition);
+        respawnPoint = cellPosition;    
         transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
         transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
+        gridManager.ClearRadius(gameObject);
     }
 
     public void LightReset()
@@ -151,7 +150,7 @@ public class GridBasedSeeker : Agent
 
         // Rb Movement action
         moveAmount = Mathf.Max(0, actionBuffers.ContinuousActions[0]);
-        Vector3 newPosition = transform.position + transform.forward * moveAmount * moveSpeed * Time.deltaTime;
+        Vector3 newPosition = transform.position + transform.forward * moveAmount * Time.deltaTime * (moveSpeed / Time.timeScale);
         rb.MovePosition(newPosition);
 
         // Rb Rotation action
@@ -195,7 +194,6 @@ public class GridBasedSeeker : Agent
                 // gridManager.ClearTarget(collided.gameObject.transform.position);
                 gridManager.ColourChange(Color.green);
                 SetReward(1.0f);
-                hiderAgent.EndEpisode();
                 EndEpisode();
             }
             else if (collided.gameObject.layer == LayerMask.NameToLayer("ColliderWall"))
@@ -203,7 +201,6 @@ public class GridBasedSeeker : Agent
                 // Debug.Log("Wall Hit");
                 gridManager.ColourChange(Color.red);
                 SetReward(-1.0f);
-                hiderAgent.EndEpisode();
                 EndEpisode();
             }
         }
@@ -212,24 +209,24 @@ public class GridBasedSeeker : Agent
         {
             if (collided.gameObject.layer == LayerMask.NameToLayer("ColliderWall"))
             {
-                EndEpisode();
+                LightReset();
             }
         }
         else if (gridManager.currentAgent == GridManager.AgentType.SelfPlay)
         {
             if (collided.gameObject.layer == LayerMask.NameToLayer("Target"))
-            {
+            {  
+                gridManager.ColourChange(Color.green);
                 SetReward(1.0f);
-                hiderAgent.SetReward(-1f);
+                hiderAgent.SetReward(-1.0f);
                 hiderAgent.EndEpisode();
                 EndEpisode();
             }
             else if (collided.gameObject.layer == LayerMask.NameToLayer("ColliderWall"))
             {   
-                SetReward(-1.0f);
+                AddReward(-0.25f);
                 LightReset();
             }
-
         }
     }
 }

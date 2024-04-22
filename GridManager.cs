@@ -96,8 +96,10 @@ public class GridManager : MonoBehaviour
         }
     }
 
-    public void ClearRadius(Vector3Int cellPosition)
+    public void ClearRadius(GameObject agent)
     {
+        Debug.Log("Clearing radius around " + agent.name);
+        Vector3Int cellPosition = gridSystem.WorldToCell(agent.transform.position);
         for (int x = -radius; x <= radius; x++)
         {
             for (int z = -radius; z <= radius; z++)
@@ -113,6 +115,9 @@ public class GridManager : MonoBehaviour
                         
                         // Mark the cell as empty
                         gridSystem.MarkEmpty(nearbyCell);
+
+                        // Mark it full
+                        gridSystem.MarkOccupied(nearbyCell, agent.gameObject);
 
                         // Remove the cell from the obstaclePositions list
                         Vector3 worldPosition = gridSystem.CellToWorld(nearbyCell);

@@ -2,8 +2,6 @@ using UnityEngine;
 using Unity.MLAgents;
 using Unity.MLAgents.Sensors;
 using Unity.MLAgents.Actuators;
-using System.IO;
-using Unity.VisualScripting;
 
 public class HiderAgent : Agent
 {   
@@ -63,9 +61,10 @@ public class HiderAgent : Agent
 
         // Let GridManager handle obstacle and target generation
         gridManager.GeneratePrefabs();
-        
-        // Clear Radius around agent
-        gridManager.ClearRadius(cellPosition);
+        Debug.Log("HiderControl spawned obstacles and target");
+
+        // Clear the visitation grid
+        gridManager.ClearRadius(gameObject);
     }
 
     private void SeekerControl()
@@ -74,11 +73,9 @@ public class HiderAgent : Agent
         Vector3Int cellPosition = gridManager.gridSystem.RandomCellPos();
         Vector3 worldPosition = gridManager.gridSystem.CellToWorld(cellPosition);
         respawnPoint = cellPosition;
-
-        // Clear radius around spawn point then spawn agent
-        gridManager.ClearRadius(cellPosition);
         transform.position = new Vector3(worldPosition.x, 0, worldPosition.z);
         transform.localRotation = Quaternion.Euler(0, Random.Range(0, 360), 0);
+        gridManager.ClearRadius(gameObject);
     }
 
     public void LightReset()
@@ -110,7 +107,7 @@ public class HiderAgent : Agent
     {
         // Rb Movement action
         moveAmount = Mathf.Max(0, actionBuffers.ContinuousActions[0]);
-        Vector3 newPosition = transform.position + transform.forward * moveAmount * moveSpeed * Time.deltaTime;
+        Vector3 newPosition = transform.position + transform.forward * moveAmount * Time.deltaTime * (moveSpeed / Time.timeScale);
         rb.MovePosition(newPosition);
 
         // Rb Rotation action
